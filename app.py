@@ -159,7 +159,7 @@ def main():
 					print('reset')
 					newStatus = np.zeros((nX, nY))
 				elif event.key == pygame.K_RETURN:
-					print(newStatus.T)
+					#print(newStatus.T)
 					predict(newStatus.T, Bob)
 
 			mouseClick = pygame.mouse.get_pressed()
