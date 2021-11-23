@@ -9,20 +9,11 @@ import pygame
 import numpy as np
 import time
 import random
-
-print(10*"\n")
-
-def outputStats(total, nBlue, nRed, iterations):
-
-    # print("\riteration:", iterations, end="", flush=True)
-
-    t = (4*total//10)
-    b = (4*nBlue//10)
-    r = (4*nRed//10)
-    print("\rB: [", b*"*", (t-b)*".", "]", nBlue, '%', sep='', end='      ')
-    print("R: [", r*"*", (t-r)*".", "]", nRed, '%', sep='', end='', flush=True)
+import torch
 
 
+def predict(X):
+	print('We are currently working on the neural network')
 
 
 WIDTH, HEIGHT = 500, 500
@@ -34,8 +25,9 @@ pygame.init()  # Initialize PyGame
 
 screen = pygame.display.set_mode([WIDTH, HEIGHT])  # Set size of screen
 
-red = (255, 160, 122)
-blue = (65, 105, 225)
+black = (0, 0, 0)
+gray = (100, 100, 100)
+white = (255, 255, 225)
 
 status = np.zeros((nX, nY))
 
@@ -45,74 +37,60 @@ running = True
 iterations = 0
 
 while running:
-    iterations += 1
+	iterations += 1
 
-    for x in range(0, nX):
-        for y in range(0, nY):
-            poly = [(x*xSize, y*ySize),
-                    ((x+1)*xSize, y*ySize),
-                    ((x+1)*xSize, (y+1)*ySize),
-                    (x*xSize, (y+1)*ySize)]
-
-            if status[x, y] == 1:
-                pygame.draw.polygon(screen, blue, poly, 0)
-            else:
-                pygame.draw.polygon(screen, red, poly, 0)
-
-
-
-
+	for x in range(0, nX):
+		for y in range(0, nY):
+			poly = [(x*xSize, y*ySize),
+					((x+1)*xSize, y*ySize),
+					((x+1)*xSize, (y+1)*ySize),
+					(x*xSize, (y+1)*ySize)]
+			
+			if status[x, y] == 1:
+				pygame.draw.polygon(screen, white, poly, 0)
+			elif status[x, y] == 0:
+				pygame.draw.polygon(screen, black, poly, 0)
+			else:
+				pygame.draw.polygon(screen, gray, poly, 0)
 
 
-    newStatus = np.copy(status)
+	newStatus = np.copy(status)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			running = False
 
-        if event.type == pygame.KEYDOWN:
-            pauseRun = not pauseRun
+		if event.type == pygame.KEYDOWN:
+			#pauseRun = not pauseRun
+			if event.key == pygame.K_r:
+				print('reset')
+				newStatus = np.zeros((nX, nY))
+			elif event.key == pygame.K_RETURN:
+				predict(newStatus)
 
-        mouseClick = pygame.mouse.get_pressed()
-        if sum(mouseClick) > 0:
-            posX, posY = pygame.mouse.get_pos()
-            x, y = int(np.floor(posX/xSize)), int(np.floor(posY/ySize))
-            newStatus[x, y] = not mouseClick[2]
+		mouseClick = pygame.mouse.get_pressed()
+		if sum(mouseClick) > 0:
+			posX, posY = pygame.mouse.get_pos()
+			x, y = int(np.floor(posX/xSize)), int(np.floor(posY/ySize))
+			newStatus[x, y] = not mouseClick[2]
 
-
-    if not pauseRun:
-        randX = random.randint(0, nX-1)
-        randY = random.randint(0, nX-1)
-
-        neighbours = [((randX-1)%(nX), randY),
-                        ((randX+1)%(nX), randY),
-                        (randX, (randY-1)%(nY)),
-                        (randX, (randY+1)%(nY))]
-
-        pos = random.randint(0, 3)
-
-        newStatus[randX, randY] = status[neighbours[pos]]
-
-
-        nBlue = int(np.sum(status))
-        nRed = status.size - nBlue
-
-        outputStats(status.size, nBlue, nRed, iterations)
-
-        if nBlue == status.size:
-            running = False
-            print()
-            print(10*' ', "BLUE-DOMINATION in", iterations, "iterations", flush=True)
-        elif nRed == status.size:
-            running = False
-            print()
-            print(60*' ', "RED-DOMINATION in", iterations, "iterations", flush=True)
+			neighbours = [((x-1)%(nX), y),
+						  ((x+1)%(nX), y),
+						  (x, (y-1)%(nY)),
+						  (x, (y+1)%(nY))]
+			for coords in neighbours:
+				x2, y2 = coords[0], coords[1]
+				if newStatus[x2, y2] == 1:
+					pass
+				else:
+					newStatus[x2, y2] = 2
 
 
 
-    status = np.copy(newStatus)
-    time.sleep(0.01)
-    pygame.display.flip()
+
+	status = np.copy(newStatus)
+	time.sleep(0.01)
+	pygame.display.flip()
 
 
 pygame.quit()
